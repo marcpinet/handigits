@@ -37,17 +37,26 @@ def unzip_dataset(zip_path, output_path):
 
 
 def main():
-    
+    # Define paths
+    data_path = "data/"
+    raw_data_path = os.path.join(data_path, "raw/")
+    processed_data_path = os.path.join(data_path, "processed/")
+    model_path = os.path.join(data_path, "model/")
+    dataset_url = "your_dataset_url"
+
     # Getting data if not exists
-    if create_directory_if_not_exists(data_path):
+    create_directory_if_not_exists(data_path)
+    if not os.path.exists(raw_data_path):
         print("Downloading dataset to", raw_data_path, "...")
         create_directory_if_not_exists(raw_data_path)
-        create_directory_if_not_exists(processed_data_path)
-        download_file(dataset_url, raw_data_path + "dataset.zip")
-        unzip_dataset(raw_data_path + "dataset.zip", raw_data_path)
+        download_file(dataset_url, os.path.join(raw_data_path, "dataset.zip"))
+        unzip_dataset(os.path.join(raw_data_path, "dataset.zip"), raw_data_path)
         print("Dataset downloaded and extracted.")
-    
-        # Preprocessing data
+    else:
+        print("Raw data already exists. Skipping download.")
+
+    # Preprocessing data
+    if not os.path.exists(processed_data_path):
         print("Preprocessing data...")
         os.makedirs(processed_data_path, exist_ok=True)
         os.makedirs(os.path.join(processed_data_path, 'train'), exist_ok=True)
@@ -59,27 +68,35 @@ def main():
         np.save(os.path.join(processed_data_path, 'test', 'X_test.npy'), X_test)
         np.save(os.path.join(processed_data_path, 'test', 'y_test.npy'), y_test)
         print("Data preprocessed and saved.")
-    
-        # Initializing model
-        if create_directory_if_not_exists(model_path):
-            print("Creating model...")
-            input_shape = X_train.shape[1:]
-            num_classes = y_train.shape[1]
-            model = create_model(input_shape, num_classes)
-            model.summary()
-            print("Model created.")
-            
-            # Training model
-            print("Training model...")
-            model = create_model(input_shape, num_classes)
-            callbacks = get_callbacks(model_path + "model.keras")
-            history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30, batch_size=32, callbacks=callbacks)
-            model.save(model_path + "final_model.keras")
-            print("Model trained and saved.")
+    else:
+        print("Processed data already exists. Skipping preprocessing.")
+        X_train = np.load(os.path.join(processed_data_path, 'train', 'X_train.npy'))
+        y_train = np.load(os.path.join(processed_data_path, 'train', 'y_train.npy'))
+        X_test = np.load(os.path.join(processed_data_path, 'test', 'X_test.npy'))
+        y_test = np.load(os.path.join(processed_data_path, 'test', 'y_test.npy'))
+
+    # Initializing model
+    if not os.path.exists(model_path):
+        create_directory_if_not_exists(model_path)
+        print("Creating model...")
+        input_shape = X_train.shape[1:]
+        num_classes = y_train.shape[1]
+        model = create_model(input_shape, num_classes)
+        model.summary()
+        print("Model created.")
         
+        # Training model
+        print("Training model...")
+        callbacks = get_callbacks(os.path.join(model_path, "model.keras"))
+        history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30, batch_size=32, callbacks=callbacks)
+        model.save(os.path.join(model_path, "final_model.keras"))
+        print("Model trained and saved.")
+    else:
+        print("Model already exists. Skipping training.")
+
     # Inference on live video
     print("Starting live recognition...")
-    model = tf.keras.models.load_model(model_path + "final_model.keras")
+    model = tf.keras.models.load_model(os.path.join(model_path, "final_model.keras"))
     start_live_recognition(model)
 
 
