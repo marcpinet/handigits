@@ -37,13 +37,6 @@ def unzip_dataset(zip_path, output_path):
 
 
 def main():
-    # Define paths
-    data_path = "data/"
-    raw_data_path = os.path.join(data_path, "raw/")
-    processed_data_path = os.path.join(data_path, "processed/")
-    model_path = os.path.join(data_path, "model/")
-    dataset_url = "your_dataset_url"
-
     # Getting data if not exists
     create_directory_if_not_exists(data_path)
     if not os.path.exists(raw_data_path):
