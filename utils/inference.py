@@ -8,21 +8,30 @@ input_shape = (64, 64)
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
+connection_drawing_spec = mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=1)
 
-def preprocess_image(image):
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    equalized = cv2.equalizeHist(gray)
-    resized = cv2.resize(equalized, input_shape)
+
+def preprocess_image(hand_image, hand_landmarks):
+    black_image = np.zeros_like(hand_image)
+    mp_drawing.draw_landmarks(
+        black_image, hand_landmarks, mp_hands.HAND_CONNECTIONS,
+        landmark_drawing_spec=None, connection_drawing_spec=connection_drawing_spec
+    )
+    
+    gray = cv2.cvtColor(black_image, cv2.COLOR_BGR2GRAY)
+    gray[gray > 0] = 255
+    
+    resized = cv2.resize(gray, input_shape)
     normalized = resized / 255.0
     reshaped = np.expand_dims(normalized, axis=-1)
-    return np.expand_dims(reshaped, axis=0)
+    return np.expand_dims(reshaped, axis=0), resized
 
 
-def segment_hand(image, scale_factor):
+def segment_hand(image, scale_factor: float = None):
     with mp_hands.Hands(static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5) as hands:
         results = hands.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         if not results.multi_hand_landmarks:
-            return None
+            return None, None, None
         hand_landmarks = results.multi_hand_landmarks[0]
         x_min, x_max = min(lm.x for lm in hand_landmarks.landmark), max(lm.x for lm in hand_landmarks.landmark)
         y_min, y_max = min(lm.y for lm in hand_landmarks.landmark), max(lm.y for lm in hand_landmarks.landmark)
@@ -37,7 +46,7 @@ def segment_hand(image, scale_factor):
         x_max, y_max = min(image.shape[1], x_max), min(image.shape[0], y_max)
         hand = image[y_min:y_max, x_min:x_max]
         hand = cv2.resize(hand, input_shape)
-        return hand, (x_min, y_min, x_max, y_max)
+        return hand, hand_landmarks, (x_min, y_min, x_max, y_max)
 
 
 def start_live_recognition(model):
@@ -58,18 +67,26 @@ def start_live_recognition(model):
             
             if results.multi_hand_landmarks:
                 hand_landmarks = results.multi_hand_landmarks[0]
-                segmented_hand = segment_hand(frame, scale_factor)
+                segmentation_result = segment_hand(frame, scale_factor)
                 
-                if segmented_hand is not None:
-                    hand, (x_min, y_min, x_max, y_max) = segmented_hand
-                    preprocessed_image = preprocess_image(hand)
+                if segmentation_result[0] is not None:
+                    segmented_hand, segmented_landmarks, (x_min, y_min, x_max, y_max) = segmentation_result
+                    preprocessed_image, preprocessed_display = preprocess_image(segmented_hand, segmented_landmarks)
                     predictions = model.predict(preprocessed_image)
                     predicted_class = np.argmax(predictions)
                     predicted_label = class_names[predicted_class]
                     
-                    mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                    mp_drawing.draw_landmarks(
+                        frame, 
+                        hand_landmarks, 
+                        mp_hands.HAND_CONNECTIONS, 
+                        connection_drawing_spec=connection_drawing_spec
+                    )
                     cv2.putText(frame, f'Prediction: {predicted_label}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
                     cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                    
+                    preprocessed_display = cv2.cvtColor(preprocessed_display, cv2.COLOR_GRAY2BGR)
+                    frame[y_min:y_min+preprocessed_display.shape[0], x_min:x_min+preprocessed_display.shape[1]] = preprocessed_display
                 else:
                     cv2.putText(frame, 'Hand not segmented', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
             else:
