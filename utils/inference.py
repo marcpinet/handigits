@@ -49,6 +49,7 @@ def preprocess_image(hand_image, hand_landmarks):
     reshaped = np.expand_dims(normalized, axis=-1)
     return np.expand_dims(reshaped, axis=0), resized
 
+
 def segment_hand(image, scale_factor: float = None):
     with mp_hands.Hands(static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5) as hands:
         results = hands.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
