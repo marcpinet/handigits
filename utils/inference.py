@@ -21,11 +21,33 @@ def preprocess_image(hand_image, hand_landmarks):
     gray = cv2.cvtColor(black_image, cv2.COLOR_BGR2GRAY)
     gray[gray > 0] = 255
     
-    resized = cv2.resize(gray, input_shape)
+    contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    if contours:
+        hand_contour = max(contours, key=cv2.contourArea)
+        
+        x, y, w, h = cv2.boundingRect(hand_contour)
+        
+        zoom_factor = min(input_shape[0] / w, input_shape[1] / h)
+        
+        zoomed_size = (int(w * zoom_factor), int(h * zoom_factor))
+        
+        zoomed_hand = cv2.resize(gray[y:y+h, x:x+w], zoomed_size)
+        
+        zoomed_image = np.zeros(input_shape, dtype=np.uint8)
+        
+        y_offset = (input_shape[0] - zoomed_size[1]) // 2
+        x_offset = (input_shape[1] - zoomed_size[0]) // 2
+        
+        zoomed_image[y_offset:y_offset+zoomed_size[1], x_offset:x_offset+zoomed_size[0]] = zoomed_hand
+        
+        resized = zoomed_image
+    else:
+        resized = cv2.resize(gray, input_shape)
+    
     normalized = resized / 255.0
     reshaped = np.expand_dims(normalized, axis=-1)
     return np.expand_dims(reshaped, axis=0), resized
-
 
 def segment_hand(image, scale_factor: float = None):
     with mp_hands.Hands(static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5) as hands:
