@@ -17,14 +17,14 @@ model_path = data_path + "model/"
 dataset_url = "https://codeload.github.com/ardamavi/Sign-Language-Digits-Dataset/zip/refs/heads/master"
 
 
-def create_directory_if_not_exists(directory):
+def create_directory_if_not_exists(directory: str) -> bool:
     if not os.path.exists(directory):
         os.makedirs(directory)
         return True
     return False
 
 
-def unzip_dataset(zip_path, output_path):
+def unzip_dataset(zip_path: str, output_path: str):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         root = zip_ref.namelist()[0].split("/")[0]
         for file in tqdm(zip_ref.namelist(), desc="Extracting files", unit="files"):
@@ -36,8 +36,8 @@ def unzip_dataset(zip_path, output_path):
     shutil.rmtree(output_path + root, ignore_errors=True)
 
 
-def directory_has_files(directory):
-    for root, dirs, files in os.walk(directory):
+def directory_has_files(directory: str) -> bool:
+    for _, _, files in os.walk(directory):
         if any(files):
             return True
     return False

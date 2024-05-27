@@ -5,6 +5,7 @@ import mediapipe as mp
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 from tqdm import tqdm
+from mediapipe.framework.formats.landmark_pb2 import NormalizedLandmarkList
 
 
 mp_drawing = mp.solutions.drawing_utils
@@ -13,7 +14,7 @@ mp_hands = mp.solutions.hands
 connection_drawing_spec = mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=1)
 
 
-def preprocess_image(hand_image, hand_landmarks):
+def preprocess_image(hand_image: np.ndarray, hand_landmarks: NormalizedLandmarkList) -> np.ndarray:
     black_image = np.zeros_like(hand_image)
     
     mp_drawing.draw_landmarks(
@@ -30,7 +31,7 @@ def preprocess_image(hand_image, hand_landmarks):
     return reshaped
 
 
-def load_data(data_dir):
+def load_data(data_dir: str) -> tuple[np.ndarray, np.ndarray]:
     images = []
     labels = []
     
@@ -55,6 +56,6 @@ def load_data(data_dir):
     return images, labels
 
 
-def preprocess_data(images, labels):
+def preprocess_data(images: np.ndarray, labels: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     labels = to_categorical(labels, num_classes=10)
     return train_test_split(images, labels, test_size=0.2, random_state=42)

@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import mediapipe as mp
+from tensorflow.keras.models import Model
+from mediapipe.framework.formats.landmark_pb2 import NormalizedLandmarkList
 
 
 class_names = {0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9'}
@@ -11,7 +13,7 @@ mp_hands = mp.solutions.hands
 connection_drawing_spec = mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=1)
 
 
-def preprocess_image(hand_image, hand_landmarks):
+def preprocess_image(hand_image: np.ndarray, hand_landmarks: NormalizedLandmarkList) -> tuple[np.ndarray, np.ndarray]:
     black_image = np.zeros_like(hand_image)
     mp_drawing.draw_landmarks(
         black_image, hand_landmarks, mp_hands.HAND_CONNECTIONS,
@@ -25,22 +27,14 @@ def preprocess_image(hand_image, hand_landmarks):
     
     if contours:
         hand_contour = max(contours, key=cv2.contourArea)
-        
         x, y, w, h = cv2.boundingRect(hand_contour)
-        
         zoom_factor = min(input_shape[0] / w, input_shape[1] / h)
-        
         zoomed_size = (int(w * zoom_factor), int(h * zoom_factor))
-        
         zoomed_hand = cv2.resize(gray[y:y+h, x:x+w], zoomed_size)
-        
         zoomed_image = np.zeros(input_shape, dtype=np.uint8)
-        
         y_offset = (input_shape[0] - zoomed_size[1]) // 2
         x_offset = (input_shape[1] - zoomed_size[0]) // 2
-        
         zoomed_image[y_offset:y_offset+zoomed_size[1], x_offset:x_offset+zoomed_size[0]] = zoomed_hand
-        
         resized = zoomed_image
     else:
         resized = cv2.resize(gray, input_shape)
@@ -50,7 +44,7 @@ def preprocess_image(hand_image, hand_landmarks):
     return np.expand_dims(reshaped, axis=0), resized
 
 
-def segment_hand(image, scale_factor: float = None):
+def segment_hand(image: np.ndarray, scale_factor: float) -> tuple[np.ndarray, NormalizedLandmarkList, tuple[int, int, int, int]]:
     with mp_hands.Hands(static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5) as hands:
         results = hands.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         if not results.multi_hand_landmarks:
@@ -72,7 +66,7 @@ def segment_hand(image, scale_factor: float = None):
         return hand, hand_landmarks, (x_min, y_min, x_max, y_max)
 
 
-def start_live_recognition(model):
+def start_live_recognition(model: Model):
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open video stream.")

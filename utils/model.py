@@ -5,16 +5,16 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 
 
 class HistoryLogger(Callback):
-    def __init__(self, filepath):
+    def __init__(self, filepath: str):
         self.filepath = filepath
 
-    def on_epoch_end(self, epoch, logs=None):
+    def on_epoch_end(self, epoch: int, logs: dict = None):
         if logs is not None:
             history = {key: value.tolist() if isinstance(value, np.ndarray) else value for key, value in logs.items()}
             np.save(self.filepath, history)
 
 
-def create_model(input_shape, num_classes):
+def create_model(input_shape: tuple[int, int, int], num_classes: int) -> Sequential:
     model = Sequential([
         Conv2D(32, (3, 3), activation='relu', input_shape=input_shape),
         BatchNormalization(),
@@ -42,7 +42,7 @@ def create_model(input_shape, num_classes):
     return model
 
 
-def get_callbacks(model_path, patience=10):
+def get_callbacks(model_path: str, patience: int = 10) -> list[Callback]:
     return [
         EarlyStopping(patience=patience, restore_best_weights=True),
         ModelCheckpoint(f"{model_path}", save_best_only=True),
