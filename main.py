@@ -81,7 +81,7 @@ def main():
     if not os.path.exists(model_path) or not directory_has_files(model_path):
         create_directory_if_not_exists(model_path)
         print("Creating model...")
-        input_shape = X_train.shape[1:]
+        input_shape = X_train.shape[1]
         num_classes = y_train.shape[1]
         model = create_model(input_shape, num_classes)
         model.summary()
@@ -91,7 +91,7 @@ def main():
     print("Training model...")
     if not os.path.exists(os.path.join(model_path, "model.keras")):
         callbacks = get_callbacks(os.path.join(model_path, "model.keras"))
-        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30, batch_size=32, callbacks=callbacks)
+        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=40, batch_size=32, callbacks=callbacks)
         model.save(os.path.join(model_path, "final_model.keras"))
         print("Model trained and saved.")
     else:

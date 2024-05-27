@@ -45,7 +45,7 @@ After that, you can proceed to start the program by running `main.py`.
 
 ## 🥅 TO-DO List
 
-* Try an approach with a simple NN instead of a CNN (by passing a vector of the hand landmarks instead of a 2D image)
+* Nothing yet!
 
 ## ✍️ Authors
 
