@@ -1,4 +1,4 @@
-# Handigit
+# Handigits
 
 ## 📝 Description
 
@@ -26,7 +26,7 @@ It was primarily made for fun and to learn more about real-time processing and d
 Get a copy of the Project. Assuming you have git installed, open your Terminal and enter:
 
 ```bash
-git clone 'https://github.com/marcpinet/handigit'
+git clone 'https://github.com/marcpinet/handigits'
 ```
 
 To install all needed requirements run the following command in the project directory:
