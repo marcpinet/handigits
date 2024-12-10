@@ -1,7 +1,5 @@
-tensorflow
 requests
 opencv-python
-scikit-learn
 numpy
 mediapipe
 tqdm

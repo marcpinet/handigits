@@ -3,12 +3,12 @@ import zipfile
 import shutil
 import numpy as np
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-import tensorflow as tf
 from tqdm import tqdm
 from utils.retriever import download_file
 from utils.preprocess import load_data, preprocess_data
 from utils.model import create_model, get_callbacks
 from utils.inference import start_live_recognition
+from neuralnetlib.models import Sequential
 
 data_path = "data/"
 raw_data_path = data_path + "raw/"
@@ -86,20 +86,21 @@ def main():
         model = create_model(input_shape, num_classes)
         model.summary()
         print("Model created.")
-
-    # Training model
-    print("Training model...")
-    if not os.path.exists(os.path.join(model_path, "model.keras")):
-        callbacks = get_callbacks(os.path.join(model_path, "model.keras"))
-        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=40, batch_size=32, callbacks=callbacks)
-        model.save(os.path.join(model_path, "final_model.keras"))
+    else:
+        print("Model already exists. Skipping model creation.")
+        model = Sequential.load(os.path.join(model_path, "model.nnlb"))
+    
+    if not os.path.exists(os.path.join(model_path, "model.nnlb")):
+        print("Training model...")
+        callbacks = get_callbacks(os.path.join(model_path, "model.nnlb"))
+        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=40, batch_size=32, callbacks=callbacks, metrics=['accuracy'])
+        model.save(os.path.join(model_path, "model.nnlb"))
         print("Model trained and saved.")
     else:
         print("Model already trained. Skipping training.")
     
     # Inference on live video
     print("Starting live recognition...")
-    model = tf.keras.models.load_model(os.path.join(model_path, "final_model.keras"))
     start_live_recognition(model)
 
 

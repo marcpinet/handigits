@@ -1,7 +1,7 @@
 import numpy as np
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Conv1D
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
+from neuralnetlib.models import Sequential
+from neuralnetlib.layers import Dense, Dropout, BatchNormalization, Input
+from neuralnetlib.callbacks import EarlyStopping, Callback
 
 
 class HistoryLogger(Callback):
@@ -15,26 +15,25 @@ class HistoryLogger(Callback):
 
 
 def create_model(input_shape: int, num_classes: int) -> Sequential:
-    model = Sequential([
-        Dense(128, activation='relu', input_shape=(input_shape,)),
-        BatchNormalization(),
-        Dropout(0.3),
-        Dense(256, activation='relu'),
-        BatchNormalization(),
-        Dropout(0.4),
-        Dense(512, activation='relu'),
-        BatchNormalization(),
-        Dropout(0.5),
-        Dense(num_classes, activation='softmax')
-    ])
+    model = Sequential()
+    model.add(Input(input_shape=input_shape))
+    model.add(Dense(128, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.3))
+    model.add(Dense(256, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+    model.add(Dense(512, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
     
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss_function='categorical_crossentropy')
     return model
 
 
 def get_callbacks(model_path: str, patience: int = 10) -> list[Callback]:
     return [
         EarlyStopping(patience=patience, restore_best_weights=True),
-        ModelCheckpoint(f"{model_path}", save_best_only=True),
-        HistoryLogger(model_path.replace('.keras', '_history.npy'))
+        HistoryLogger(model_path.replace('.nnlb', '_history.npy'))
     ]
