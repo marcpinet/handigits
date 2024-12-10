@@ -2,8 +2,8 @@ import os
 import numpy as np
 import cv2
 import mediapipe as mp
-from sklearn.model_selection import train_test_split
-from tensorflow.keras.utils import to_categorical
+from neuralnetlib.utils import train_test_split
+from neuralnetlib.preprocessing import one_hot_encode
 from tqdm import tqdm
 from mediapipe.framework.formats.landmark_pb2 import NormalizedLandmarkList
 
@@ -41,5 +41,5 @@ def load_data(data_dir: str) -> tuple[np.ndarray, np.ndarray]:
 
 
 def preprocess_data(landmarks: np.ndarray, labels: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    labels = to_categorical(labels, num_classes=10)
+    labels = one_hot_encode(labels, num_classes=10)
     return train_test_split(landmarks, labels, test_size=0.2, random_state=42)

@@ -4,6 +4,9 @@
 
 The goal of this project was to make a deep learning model that could recognize hand signs digits, no matter the environment.
 
+> [!TIP]
+> NEW: The project now uses [Neuralnetlib, my own deep learning framework](https://github.com/marcpinet/neuralnetlib) instead of TensorFlow and Keras!
+
 Every information you need is in the source code, but here are some important points:
 
 - The dataset used is: [Sign-Language-Digits-Dataset](https://github.com/ardamavi/Sign-Language-Digits-Dataset)
